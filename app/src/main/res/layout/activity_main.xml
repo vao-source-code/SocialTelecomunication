@@ -98,6 +98,15 @@
             android:text="Iniciar Sesion"
             android:textColor="@color/white" />
 
+        <com.google.android.gms.common.SignInButton
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/btnLoginGoogle"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginLeft="20dp"
+            />
+
 
     </LinearLayout>
     <LinearLayout

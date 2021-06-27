@@ -76,7 +76,7 @@ class RegisterActivity : AppCompatActivity() {
 
         rAuth.createUserWithEmailAndPassword(email,password).addOnCompleteListener {
             if(it.isSuccessful){
-                var id : String = rAuth.currentUser?.uid ?:  ""
+                val id : String = rAuth.currentUser?.uid ?:  ""
                 val map : MutableMap<String,String> = mutableMapOf()
                 map["email"] = email
                 map["username"] =userName
