@@ -1,4 +1,4 @@
-package com.sosolution.socialtelecomunication
+package com.sosolution.socialtelecomunication.activities
 
 import android.os.Bundle
 import android.widget.Button
@@ -9,11 +9,10 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.sosolution.socialtelecomunication.R
 import de.hdodenhof.circleimageview.CircleImageView
-import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
-import kotlin.collections.HashMap
 
 
 class RegisterActivity : AppCompatActivity() {

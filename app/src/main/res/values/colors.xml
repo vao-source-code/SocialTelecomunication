@@ -8,5 +8,5 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="naranjaFirebase">#F57C00</color>
-    <color name="grisFirebase">#919191</color>
+    <color name="grisFirebase">#ECEFF1</color>
 </resources>

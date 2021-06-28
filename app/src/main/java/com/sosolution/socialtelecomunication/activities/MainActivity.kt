@@ -1,4 +1,4 @@
-package com.sosolution.socialtelecomunication
+package com.sosolution.socialtelecomunication.activities
 
 import android.content.ContentValues.TAG
 import android.content.Intent
@@ -9,16 +9,17 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
-import java.security.cert.CertStore
+import com.sosolution.socialtelecomunication.R
+import com.sosolution.socialtelecomunication.providers.AuthProvider
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
@@ -33,7 +34,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var mTextInputEmail: TextInputEditText
     lateinit var mTextInputPassword: TextInputEditText
     lateinit var mBtnLogin: Button
-    lateinit var mAuth: FirebaseAuth
+     lateinit var mAuthProvider: AuthProvider
     lateinit var mBtnLoginGoogle: SignInButton
     lateinit var googleSignInClient: GoogleSignInClient
     lateinit var mFirebaseFirestore: FirebaseFirestore
@@ -48,9 +49,10 @@ class MainActivity : AppCompatActivity() {
 
         //inicio google autentificacion
 
-        mAuth = FirebaseAuth.getInstance();
-        iniciarSesionGoogle()
         mFirebaseFirestore = FirebaseFirestore.getInstance()
+        mAuthProvider = AuthProvider()
+
+        iniciarSesionGoogle()
 
 
 
@@ -88,7 +90,7 @@ class MainActivity : AppCompatActivity() {
                 // Google Sign In was successful, authenticate with Firebase
                 val account = task.getResult(ApiException::class.java)!!
                 Log.d(TAG, "firebaseAuthWithGoogle:" + account.id)
-                firebaseAuthWithGoogle(account.idToken!!)
+                firebaseAuthWithGoogle(account)
             } catch (e: ApiException) {
                 // Google Sign In failed, update UI appropriately
                 Log.w(TAG, "Google sign in failed", e)
@@ -97,17 +99,17 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    private fun firebaseAuthWithGoogle(idToken: String) {
-        val credential = GoogleAuthProvider.getCredential(idToken, null)
-        mAuth.signInWithCredential(credential)
-            .addOnCompleteListener(this) { task ->
+    private fun firebaseAuthWithGoogle(account : GoogleSignInAccount) {
+        mAuthProvider.googleLogin(account).addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
 
-                    val id = mAuth.currentUser?.uid ?:  ""
-                    checkUserExist(id)
+                    val id = mAuthProvider.getUid()
+
+                    if (id != null) {
+                        checkUserExist(id)
+                    }
                     // Sign in success, update UI with the signed-in user's information
                     Log.d(TAG, "signInWithCredential:success")
-                    val user = mAuth.currentUser
 
                     showHomeActivity()
 
@@ -121,7 +123,6 @@ class MainActivity : AppCompatActivity() {
     private fun checkUserExist(id: String) {
         mFirebaseFirestore.collection("Users").document(id).get().addOnSuccessListener { it ->
             if(it.exists()){
-
                 showHomeActivity()
             }else{
                 usuarioNuevoGoogle(id)
@@ -131,12 +132,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun usuarioNuevoGoogle(id : String) {
-        val email = mAuth.currentUser?.email ?: ""
+        val email = mAuthProvider.getEmail()
+
         val map : MutableMap<String,String> = mutableMapOf()
-        map["email"] = email
+        if(email !=null){
+            map["email"] = email
+
+        }
         mFirebaseFirestore.collection("Users").document(id).set(map).addOnCompleteListener {
             if(it.isSuccessful){
-                showHomeActivity()
+                intent = Intent(this, CompleteProfileActivity::class.java)
+                startActivity(intent)
             }else{
                 Toast.makeText(this, "No se pudo almacenar la informacion del usuario", Toast.LENGTH_SHORT).show()
             }
@@ -185,18 +191,13 @@ class MainActivity : AppCompatActivity() {
         if (email.isNotEmpty() && password.isNotEmpty()) {
 
             if (isEmailValid(email)) {
-                mAuth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener {
+                mAuthProvider.login(email,password).addOnCompleteListener {
                         if (it.isSuccessful) {
                             Toast.makeText(this, "pase por aca ", Toast.LENGTH_LONG).show()
 
                             showHomeActivity()
                         } else {
-                            Toast.makeText(
-                                this,
-                                "El email o contraseña no son correctas ",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            Toast.makeText(this, "El email o contraseña no son correctas ", Toast.LENGTH_LONG).show()
                         }
 
                     }
@@ -208,6 +209,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    //ejecuta vista de Home activity
     private fun showHomeActivity() {
 
         val intent = Intent(this, HomeActivity::class.java)
